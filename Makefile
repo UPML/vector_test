@@ -1,12 +1,12 @@
-main: clean vector.o source
-	g++ ./vector.o -o vector -pg -lgtest
+main: clean main.o source
+	g++ ./main.o -o main -pg -lgtest
 clean:
-	rm -f ./vector
+	rm -f ./main
 	rm -rf ./*.o
 	rm -f ./gmon.out
-vector.o:
-	g++ -ggdb -c ./vector.cpp -pg -std=c++11
+main.o:
+	g++ -ggdb -c ./main.cpp -pg -std=c++11
 edit:
-	vim ./vector.cpp
+	vim ./main.cpp
 run:
-	./vector
+	./main
