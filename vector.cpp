@@ -1,9 +1,8 @@
 #include <ctime>
 #include <iostream>
-#include <stdexcept>
 #include <random>
 #include "vector.h"
-#include <vector>
+#include "gtest/gtest.h"
 
 //#define MEMORY_CHECK
 
@@ -22,8 +21,6 @@ public:
 	}
 
 };
-
-
 
 class TestClWithCopy
 {
@@ -95,170 +92,267 @@ class TestVectror
 public:
 	void TestWithCopy()
 	{
-		std::cout << "default ctor" << std::endl;
+		//test default ctor
 		Vector<T> data;
-		if (data.size() != 0 || (!data.empty()))
-			throw std::exception();
-		std::cout << "push_back" << std::endl;
+		ASSERT_FALSE(data.size() != 0 || (!data.empty()));
+		//test push_back
 		data.push_back(T(1));
 		data.push_back(std::move(T(2)));
 		T tmp = T(3);
 		data.push_back(tmp);
-		if (data.size() != 3)
-			throw std::exception();
-		std::cout << "copy ctor" << std::endl;
+		ASSERT_EQ(data.size(), 3);
+		//test copy ctor
 		Vector<T> copy(data);
-		if (copy.size() != 3)
-			throw std::exception();
+		ASSERT_EQ(copy.size(), 3);
 		copy.push_back(T(5));
-		if (data.size() != 3)
-			throw std::exception();
-		std::cout << "move ctor" << std::endl;
+		ASSERT_EQ(data.size(), 3);
+		//test move ctor
 		Vector<T> temporary;
 		temporary.push_back(T(4));
 		Vector<T> moved(std::move(temporary));
-		if (moved.size() != 1)
-			throw std::exception();
-		std::cout << "copy operator =" << std::endl;
+		ASSERT_EQ(moved.size(), 1);
+		//test copy operator =
 		copy = copy = moved;
-		if (copy.size() != 1)
-			throw std::exception();
-		std::cout << "move operator =" << std::endl;
+		ASSERT_EQ(copy.size(), 1);
+		//test move operator =
 		Vector<T> moved2 = std::move(moved);
-		if (moved2.size() != 1)
-			throw std::exception();
-		std::cout << "swap" << std::endl;
+		ASSERT_EQ(moved2.size(), 1);
+		//test swap
 		data.swap(moved2);
-		if (data.size() != 1 || moved2.size() != 3)
-			throw std::exception();
+		ASSERT_EQ(data.size(), 1);
+		ASSERT_EQ(moved2.size(), 3);
 		std::swap(data, moved2);
-		if (data.size() != 3 || moved2.size() != 1)
-			throw std::exception();
-		std::cout << "empty" << std::endl;
-		if (data.empty())
-			throw std::exception();
+		ASSERT_EQ(data.size(), 3);
+		ASSERT_EQ(moved2.size(), 1);
+		//test empty
+		ASSERT_FALSE(data.empty());
+		ASSERT_FALSE(moved2.empty());
+		moved2.pop_back();
+		ASSERT_TRUE(moved2.empty());
+		moved2.push_back(T(1));
 		//size() has been tested already
-		std::cout << "max size = " << data.max_size() << std::endl;
+		//test max size = " << data.max_size() << std::endl;
 		data.push_back(T(7));
-		std::cout << "pop_back" << std::endl;
+		//test pop_back
 		for (size_t i = 0; i < 10; ++i)
 			data.push_back(T(i + 10));
 		if (data.size() != 14)
 			throw std::exception();
 		for (size_t i = 0; i < 10; ++i)
 			data.pop_back();
-		if (data.size() != 4)
-			throw std::exception();
-		std::cout << "capacity" << std::endl;
-		if (data.capacity() <= 4)
-			throw std::exception();
-		std::cout << "reserve" << std::endl;
+		ASSERT_EQ(data.size(), 4);
+		//test capacity
+		ASSERT_FALSE(data.capacity() <= 4);
+		//test reserve
 		data.reserve(100);
-		if (data.capacity() != 100)
-			throw std::exception();
-		std::cout << "shrink_to_fit" << std::endl;
+		ASSERT_EQ(data.capacity(), 100);
+		//test shrink_to_fit
 		data.shrink_to_fit();
-		if (data.capacity() != data.size())
-			throw std::exception();
-		std::cout << "shrink_to_fit" << std::endl;
+		ASSERT_EQ(data.capacity(), data.size());
+		//test shrink_to_fit
 		data.clear();
-		if (data.size() != 0)
-			throw std::exception();
-		std::cout << "[]" << std::endl;
+		ASSERT_EQ(data.size(), 0);
+		//test []
 		data.push_back(T(3));
 		data[0] = T(7);
 		const Vector<T>& lnkVect = data;
 		const T& lnkT = lnkVect[0];
 		//push_back and pop_back have been already tested
-		std::cout << "emplace_back" << std::endl;
+		//test emplace_back
+#ifdef VECTOR_HAS_EMPLACE_BACK
 		data.emplace_back(777);
 		data.emplace_back(std::move(123));
-		if (data.size() != 3)
-			throw std::exception();
+		ASSERT_EQ(data.size(), 3);
+#endif // VECTOR_HAS_EMPLACE_BACK
 	}
 	void TestWithoutCopy()
 	{
-		std::cout << "default ctor" << std::endl;
+		//test default ctor
 		Vector<T> data;
-		if (data.size() != 0 || (!data.empty()))
-			throw std::exception();
-		std::cout << "push_back" << std::endl;
+		ASSERT_EQ(data.size(), 0);
+		ASSERT_TRUE(data.empty());
+		//test push_back
 		data.push_back(T(1));
 		data.push_back(std::move(T(2)));
-		if (data.size() != 2)
-			throw std::exception();
-		std::cout << "move ctor" << std::endl;
+		ASSERT_EQ(data.size(), 2);
+		//test move ctor
 		Vector<T> temporary;
 		temporary.push_back(T(4));
 		Vector<T> moved(std::move(temporary));
-		if (moved.size() != 1)
-			throw std::exception();
-		std::cout << "move operator =" << std::endl;
+		ASSERT_EQ(moved.size(), 1);
+		//test move operator =
 		Vector<T> moved2 = std::move(moved);
-		if (moved2.size() != 1)
-			throw std::exception();
-		std::cout << "swap" << std::endl;
+		ASSERT_EQ(moved2.size(), 1);
+		//test swap
 		data.swap(moved2);
-		if (data.size() != 1 || moved2.size() != 2)
-			throw std::exception();
+		ASSERT_EQ(data.size(), 1);
+		ASSERT_EQ(moved2.size(), 2);
 		std::swap(data, moved2);
-		if (data.size() != 2 || moved2.size() != 1)
-			throw std::exception();
-		std::cout << "empty" << std::endl;
-		if (data.empty())
-			throw std::exception();
+		ASSERT_EQ(data.size(), 2);
+		ASSERT_EQ(moved2.size(), 1);
+		//test empty
+		ASSERT_FALSE(data.empty());
+		ASSERT_FALSE(moved2.empty());
+		moved2.pop_back();
+		ASSERT_TRUE(moved2.empty());
+		moved2.push_back(T(1));
 		//size() has been tested already
-		std::cout << "max size = " << data.max_size() << std::endl;
+		ASSERT_EQ(std::numeric_limits<ptrdiff_t>::max() / sizeof(T), data.max_size());
 		data.push_back(T(7));
 		data.push_back(T(7));
-		std::cout << "pop_back" << std::endl;
+		//test pop_back
 		for (size_t i = 0; i < 10; ++i)
 			data.push_back(T(i + 10));
-		if (data.size() != 14)
-			throw std::exception();
+		ASSERT_EQ(data.size(), 14);
 		for (size_t i = 0; i < 10; ++i)
 			data.pop_back();
-		if (data.size() != 4)
-			throw std::exception();
-		std::cout << "capacity" << std::endl;
-		if (data.capacity() <= 4)
-			throw std::exception();
-		std::cout << "reserve" << std::endl;
+		ASSERT_EQ(data.size(), 4);
+		//test capacity
+		ASSERT_TRUE(data.capacity() > 4);
+		//test reserve
 		data.reserve(100);
-		if (data.capacity() != 100)
-			throw std::exception();
-		std::cout << "shrink_to_fit" << std::endl;
+		ASSERT_EQ(data.capacity(), 100);
+		//test shrink_to_fit
 		data.shrink_to_fit();
-		if (data.capacity() != data.size())
-			throw std::exception();
-		std::cout << "shrink_to_fit" << std::endl;
+		ASSERT_EQ(data.capacity(), data.size());
+		//test shrink_to_fit
 		data.clear();
-		if (data.size() != 0)
-			throw std::exception();
-		std::cout << "[]" << std::endl;
+		ASSERT_EQ(data.size(), 0);
+		//test []
 		data.push_back(T(3));
 		data[0] = T(7);
 		const Vector<T>& lnkVect = data;
 		const T& lnkT = lnkVect[0];
 		//push_back and pop_back have been already tested
-		std::cout << "emplace_back" << std::endl;
+		//test emplace_back
+#ifdef VECTOR_HAS_EMPLACE_BACK
 		data.emplace_back(777);
 		data.emplace_back(std::move(123));
-		if (data.size() != 3)
-			throw std::exception();
+		ASSERT_EQ(data.size(), 3);
+#endif // VECTOR_HAS_EMPLACE_BACK
 	}
 };
 
+class ClassForTestDctor
+{
+private:
+	int value_;
+public:
+	static ptrdiff_t count;
+	ClassForTestDctor()
+	{
+		++count;
+		value_ = 0;
+	}
+	//I didn't write explicit, because I use that Ctor as type conversion
+	ClassForTestDctor(const int& val) :
+		value_(val)
+	{
+		++count;
+	}
+	ClassForTestDctor(const ClassForTestDctor& other) :
+		ClassForTestDctor(other.value_)
+	{ }
+	ClassForTestDctor& operator = (const ClassForTestDctor& other)
+	{
+		value_ = other.value_;
+		return *this;
+	}
+	ClassForTestDctor(ClassForTestDctor&& other) :
+		ClassForTestDctor(other.value_)
+	{ }
+	ClassForTestDctor& operator = (ClassForTestDctor&& other)
+	{
+		value_ = other.value_;
+		return *this;
+	}
+	~ClassForTestDctor()
+	{
+		--count;
+	}
+	operator int()
+	{
+		return value_;
+	}
+};
+ptrdiff_t ClassForTestDctor::count = 0;
+
+
 void TestDctor()
 {
-	Vector<double> data;
-	size_t length = 100000000;
+	Vector<ClassForTestDctor> data;
+	size_t length = 10000;
 	data.reserve(length);
 	for (size_t i = 0; i < length; ++i)
 	{
-		data.push_back(i + 0.0);
+		data.push_back(i);
 	}
-	std::cin.get();
+}
+
+
+TEST(VectorTest, MemoryCheck)
+{
+	Vector<ClassForTestDctor> data;
+	size_t length = 20000;
+	data.reserve(length);
+	for (size_t i = 0; i < length; ++i)
+	{
+		data.push_back(i);
+	}
+	ASSERT_EQ(ClassForTestDctor::count, length);
+	data = Vector<ClassForTestDctor>();
+	ASSERT_EQ(ClassForTestDctor::count, 0);
+	data.reserve(length);
+	ASSERT_EQ(ClassForTestDctor::count, 0);
+	for (size_t i = 0; i < length; ++i)
+	{
+		data.push_back(i);
+	}
+	ASSERT_EQ(ClassForTestDctor::count, length);
+	data.clear();
+	ASSERT_EQ(ClassForTestDctor::count, 0);
+	data.reserve(length);
+	ASSERT_EQ(ClassForTestDctor::count, 0);
+	for (size_t i = 0; i < length; ++i)
+	{
+		data.push_back(i);
+	}
+	ASSERT_EQ(ClassForTestDctor::count, length);
+	for (size_t i = 0; i < length; ++i)
+	{
+		data.pop_back();
+	}
+	ASSERT_EQ(ClassForTestDctor::count, 0);
+	data.clear();
+	ASSERT_EQ(ClassForTestDctor::count, 0);
+	for (size_t i = 0; i < length; ++i)
+	{
+		data.push_back(i);
+	}
+	ASSERT_EQ(ClassForTestDctor::count, length);
+	for (size_t i = 0; i < length; ++i)
+	{
+		data.pop_back();
+	}
+	ASSERT_EQ(ClassForTestDctor::count, 0);
+	TestDctor();
+	ASSERT_EQ(ClassForTestDctor::count, 0);
+	data.clear();
+	ASSERT_EQ(ClassForTestDctor::count, 0);
+	for (size_t i = 0; i < length; ++i)
+	{
+		data.push_back(i);
+	}
+	ASSERT_EQ(ClassForTestDctor::count, length);
+	Vector<ClassForTestDctor> copy = data;
+	ASSERT_EQ(ClassForTestDctor::count, 2 * length);
+	Vector<ClassForTestDctor> copy2(data);
+	ASSERT_EQ(ClassForTestDctor::count, 3 * length);
+	copy.clear();
+	ASSERT_EQ(ClassForTestDctor::count, 2 * length);
+	Vector<ClassForTestDctor> moved = std::move(copy2);
+	Vector<ClassForTestDctor> moved2(std::move(data));
+	ASSERT_EQ(ClassForTestDctor::count, 2 * length);
 }
 
 void TestException()
@@ -275,10 +369,8 @@ void TestException()
 	}
 	size_t cap = data2.capacity();
 	Vector<ExceptCl> moved(std::move(data2));
-	if (moved.size() != 20)
-		throw std::exception();
-	if (moved.capacity() != cap)
-		throw std::exception();
+	ASSERT_EQ(moved.size(), 20);
+	ASSERT_EQ(moved.capacity(), cap);
 	for (size_t i = 0; i < 20; ++i)
 	{
 		if (moved[i].Get() != i)
@@ -297,8 +389,7 @@ void TestException()
 		}
 		for (size_t i = 0; i < copy.size(); ++i)
 		{
-			if (copy[i].Get() != (int)i)
-				throw std::exception();
+			ASSERT_EQ(copy[i].Get(), (int)i);
 		}
 	}
 	std::swap(data, moved);
@@ -324,7 +415,7 @@ void TestException()
 void TestVector()
 {
 	srand((unsigned)time(NULL));
-	std::cout << "first tests" << std::endl;
+	//std::cout << "first tests" << std::endl;
 	Vector<int> data;
 	for (int i = 0; i < 5; ++i)
 	{
@@ -386,75 +477,52 @@ void TestVector()
 	data[0] = 123;
 	if (data[0] != 123)
 		throw std::exception();
+#ifdef VECTOR_HAS_EMPLACE_BACK
 	Vector<std::vector<TestClWithCopy>> emplback;
 	emplback.emplace_back(5, TestClWithCopy(5));//std::vector ctor (size, value)
+#endif // VECTOR_HAS_EMPLACE_BACK
 
 
-#ifdef MEMORY_CHECK
-	//While this part of code is running, I have checked memory in task manager
-	std::cout << "Test memory" << std::endl;
-	data.clear();
-	size_t length = 200000000;
-	data.reserve(length);
-	for (size_t i = 0; i < length; ++i)
-	{
-		data.push_back(i);
-	}
-	std::cout << "Press ENTER";
-	std::cin.get();
-	data = Vector<int>();
-	std::cout << "Press ENTER";
-	std::cin.get();
-	data.reserve(length);
-	for (size_t i = 0; i < length; ++i)
-	{
-		data.push_back(i);
-	}
-	std::cout << "Press ENTER";
-	std::cin.get();
-	data.clear();
-	std::cout << "Press ENTER";
-	std::cin.get();
-	data.reserve(length);
-	for (size_t i = 0; i < length; ++i)
-	{
-		data.push_back(i);
-	}
-	std::cout << "Press ENTER";
-	std::cin.get();
-	for (size_t i = 0; i < length; ++i)
-	{
-		data.pop_back();
-	}
-	data.shrink_to_fit();
-	std::cout << "Press ENTER";
-	std::cin.get();
+}
 
-	std::cout << "Destructor Test" << std::endl;
-	TestDctor();
-	std::cout << "Press ENTER";
-	std::cin.get();
-#endif
 
-	std::cout << "int test" << std::endl;
+TEST(VectorTest, intTest)
+{
 	TestVectror<int>().TestWithCopy();
-	std::cout << "double test" << std::endl;
+}
+TEST(VectorTest, doubleTest)
+{
 	TestVectror<double>().TestWithCopy();
-	std::cout << "My class without copy" << std::endl;
+}
+TEST(VectorTest, MyClassWithoutCopy)
+{
 	TestVectror<TestClNonCopy>().TestWithoutCopy();
-	std::cout << "My class with data" << std::endl;
+}
+TEST(VectorTest, MyClassWithData)
+{
 	TestVectror<TestClWithData>().TestWithoutCopy();
-	std::cout << "My class with copy" << std::endl;
+}
+TEST(VectorTest, MyClassWithCopy)
+{
 	TestVectror<TestClWithCopy>().TestWithCopy();
-
+}
+TEST(VectorTest, MyClassWithCountOfInstance)
+{
+	ASSERT_EQ(ClassForTestDctor::count, 0);
+	TestVectror<TestClWithCopy>().TestWithCopy();
+	ASSERT_EQ(ClassForTestDctor::count, 0);
+}
+TEST(VectorTest, ExceptionTest)
+{
 	for (size_t i = 0; i < 5; ++i)
 	{
-		std::cout << "Exception test" << std::endl;
 		TestException();
 	}
+}
 
-	std::cout << "final test" << std::endl;
-	data.clear();
+void HugeTest()
+{
+	Vector<int> data;
 	size_t lastSize = 0;
 	std::cout << "Program can use all memory of computer. It can make problems with your PC!!!" << std::endl;
 	std::cout << "Type \"y\" to continue" << std::endl;
@@ -479,8 +547,15 @@ void TestVector()
 		std::cout << "Error " << lastSize << " " << data.size();
 	}
 }
-int main()
+
+TEST(CRectTest, CheckPerimeter)
 {
 	TestVector();
-	return 0;
+}
+
+int main(int argc, char **argv) {
+	::testing::InitGoogleTest(&argc, argv);
+	int result = RUN_ALL_TESTS();
+	HugeTest();
+	return result;
 }
