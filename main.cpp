@@ -1,3 +1,14 @@
+/*
+!!!!
+
+This is old code. It doesn't google test. Please, do not use it.  May be we should delete this file?
+Up to date version of test is in file vector.cpp
+
+
+
+
+
+*/
 #include <ctime>
 #include <iostream>
 #include <stdexcept>
@@ -483,3 +494,14 @@ int main()
 	TestVector();
 	return 0;
 }
+/*
+!!!!
+
+This is old code. It doesn't google test. Please, do not use it.  May be we should delete this file?
+Up to date version of test is in file vector.cpp
+
+
+
+
+
+*/
