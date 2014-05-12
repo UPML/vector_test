@@ -4,8 +4,6 @@
 #include "vector.h"
 #include "gtest/gtest.h"
 
-//#define MEMORY_CHECK
-
 class TestClNonCopy
 {
 public:
@@ -136,8 +134,7 @@ public:
 		//test pop_back
 		for (size_t i = 0; i < 10; ++i)
 			data.push_back(T(i + 10));
-		if (data.size() != 14)
-			throw std::exception();
+		ASSERT_EQ(data.size(), 14);
 		for (size_t i = 0; i < 10; ++i)
 			data.pop_back();
 		ASSERT_EQ(data.size(), 4);
@@ -295,6 +292,7 @@ TEST(VectorTest, MemoryCheck)
 	Vector<ClassForTestDctor> data;
 	size_t length = 20000;
 	data.reserve(length);
+	ASSERT_EQ(ClassForTestDctor::count, 0);
 	for (size_t i = 0; i < length; ++i)
 	{
 		data.push_back(i);
@@ -373,8 +371,7 @@ void TestException()
 	ASSERT_EQ(moved.capacity(), cap);
 	for (size_t i = 0; i < 20; ++i)
 	{
-		if (moved[i].Get() != i)
-			throw std::exception();
+		ASSERT_EQ(moved[i].Get(), i);
 	}
 	for (size_t j = 0; j < 18; ++j)
 	{
@@ -389,7 +386,7 @@ void TestException()
 		}
 		for (size_t i = 0; i < copy.size(); ++i)
 		{
-			ASSERT_EQ(copy[i].Get(), (int)i);
+			ASSERT_EQ(copy[i].Get(), static_cast<int>(i));
 		}
 	}
 	std::swap(data, moved);
@@ -421,62 +418,50 @@ void TestVector()
 	{
 		data.push_back(i);
 	}
-	if (data.size() != 5)
-		throw std::logic_error("wrong size");
+	ASSERT_EQ(data.size(), 5);
 	Vector<int> copy(data);
 	for (size_t i = 0; i < 5; ++i)
 	{
-		if (copy[i] != data[i])
-			throw std::exception();
+		ASSERT_EQ(copy[i], data[i]);
 	}
 	for (int i = 0; i < 5; ++i)
 		data[i] += 5;
 	for (size_t i = 0; i < 5; ++i)
 	{
-		if (copy[i] == data[i])
-			throw std::exception();
+		ASSERT_NE(copy[i], data[i]);
 	}
 	Vector<int> moved(std::move(copy));
 	for (size_t i = 0; i < 5; ++i)
 	{
-		if (moved[i] != i)
-			throw std::exception();
+		ASSERT_EQ(moved[i], i);
 	}
 	Vector<int> moved2 = std::move(moved);
 	for (size_t i = 0; i < 5; ++i)
 	{
-		if (moved2[i] != i)
-			throw std::exception();
+		ASSERT_EQ(moved2[i], i);
 	}
 	Vector<int> copy2 = data;
 	for (size_t i = 0; i < 5; ++i)
 	{
-		if (copy2[i] != data[i])
-			throw std::exception();
+		ASSERT_EQ(copy2[i], data[i]);
 	}
 	for (int i = 0; i < 5; ++i)
 		data[i] += 5;
 	for (size_t i = 0; i < 5; ++i)
 	{
-		if (copy2[i] == data[i])
-			throw std::exception();
+		ASSERT_NE(copy2[i], data[i]);
 	}
 	std::swap(data, copy2);
 	for (size_t i = 0; i < 5; ++i)
 	{
-		if (data[i] != i + 5)
-			throw std::exception();
-		if (copy2[i] != i + 10)
-			throw std::exception();
+		ASSERT_EQ(data[i], i + 5);
+		ASSERT_EQ(copy2[i], i + 10);
 	}
 	data.push_back(155);
-	if (data.size() != 6)
-		throw std::logic_error("wrong size (wait 6)");
-	if (data[5] != 155)
-		throw std::exception();
+	ASSERT_EQ(data.size(), 6);
+	ASSERT_EQ(data[5], 155);
 	data[0] = 123;
-	if (data[0] != 123)
-		throw std::exception();
+	ASSERT_EQ(data[0], 123);
 #ifdef VECTOR_HAS_EMPLACE_BACK
 	Vector<std::vector<TestClWithCopy>> emplback;
 	emplback.emplace_back(5, TestClWithCopy(5));//std::vector ctor (size, value)
@@ -526,7 +511,7 @@ void HugeTest()
 	size_t lastSize = 0;
 	std::cout << "Program can use all memory of computer. It can make problems with your PC!!!" << std::endl;
 	std::cout << "Type \"y\" to continue" << std::endl;
-	if (std::cin.get() != (int)'y')
+	if (std::cin.get() != static_cast<int>('y'))
 		return;
 	size_t max = data.max_size();
 	if (sizeof(size_t) == 8)
@@ -536,7 +521,7 @@ void HugeTest()
 		for (size_t i = 0; i < max; ++i)
 		{
 			lastSize = data.size();
-			data.push_back((int)i);
+			data.push_back(static_cast<int>(i));
 			if (i % 100000 == 0)
 				std::cout << i << " " << data.size() << " " << data.capacity() <<
 				" " << data.capacity()*sizeof(int) << std::endl;
@@ -548,14 +533,43 @@ void HugeTest()
 	}
 }
 
-TEST(CRectTest, CheckPerimeter)
+TEST(VectorTest, TestVector)
 {
 	TestVector();
 }
 
+TEST(VectorTest, TestSwapCapacity)
+{
+	Vector<int> data;
+	data.reserve(20);
+	for (size_t i = 0; i < 10; i++)
+	{
+		data.push_back(i);
+	}
+	Vector<int>(data).swap(data);
+	ASSERT_EQ(data.capacity(), 10);
+	ASSERT_EQ(data.capacity(), data.size());
+}
+
+
 int main(int argc, char **argv) {
+	setlocale(LC_ALL, "ru-RU");
+	std::cout << "Checking of iterators: ";
+#ifdef CHECK_ITERATOR
+	std::cout << "Enabled";
+#else
+	std::cout << "Diasbled";
+#endif // CHECK_ITERATOR
+	std::cout << std::endl << "Checking memory: ";
+#ifdef TEST_MEM_I
+	std::cout << "Enabled";
+#else
+	std::cout << "Diasbled";
+#endif // TEST_MEM_I
+	std::cout << std::endl;
+
 	::testing::InitGoogleTest(&argc, argv);
 	int result = RUN_ALL_TESTS();
-	HugeTest();
+
 	return result;
 }
